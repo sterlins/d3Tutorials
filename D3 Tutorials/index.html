@@ -1,0 +1,134 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>D3 Graphic</title>
+    <link rel="stylesheet" href="_/base.css">
+    <!-- Stylesheet for CSS that we want to use for styling elements that we've placed with D3 -->
+    <script src="_/d3.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style type = "text/css">
+
+
+    .chart rect {
+      fill: steelblue;
+    }
+
+    .chart text {
+      fill: white;
+      font: 10px sans-serif;
+      text-anchor: middle;
+    }
+
+    .axis text {
+      font: 10px sans-serif;
+      fill: black;
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+    </style>
+  </head>
+  <body>
+    <!-- <script src="script.js"></script> -->
+    <svg class="chart"></svg>
+    <script>
+    //https://bost.ocks.org/mike/bar/3/
+
+    //Set size of svg and margins
+    var margin = {top: 20, right: 30, bottom: 30, left: 40}
+    var width = 500 - margin.left - margin.right;
+    var height = 300 - margin.top - margin.bottom;
+
+    //Ordinal scales
+    //Note updated v4 syntax
+    var x = d3.scaleBand()
+        .range([0,width])
+        .paddingInner(.05);
+
+    //Adds scale to x-axis
+    var y = d3.scaleLinear()
+    //only range can be set before the data load.  Domain is set in callback function
+        .range([height, 0]);
+
+    var chart = d3.select(".chart")
+        .attr("width",width + margin.left + margin.right)
+        .attr("height",height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform","translate(" + margin.left+","+margin.top+")")
+      ;
+
+    //Use an external .tsv for the data.  Complete remainder of chart in
+    //callback function
+    //You will get an error if you just link the data file, because
+    //browsers enforce strict security permissions to prevent you from reading
+    // files out of the local file system.
+    // To develop locally, you must run a local web server rather than using file://….
+    // See instructions on: https://github.com/d3/d3/wiki
+    d3.tsv("data.tsv", type, function(error, data) {
+
+      //now we can set the input domain for the x & y scale
+      x.domain(data.map(function(d){
+          return d.name;
+      }));
+
+      y.domain([0, d3.max(data, function(d) {
+          return d.value;
+        })
+      ]);
+
+      //Initiates each of the bars
+      var bar = chart.selectAll("g")
+          .data(data)
+        .enter().append("g")
+          .attr("transform", function (d) {
+              return "translate(" + x(d.name)+ ",0)";
+          });
+
+      //Adds scaled rectangles for each data point
+      bar.append("rect")
+          .attr("height", function(d) {
+              return height - y(d.value);
+            })
+          .attr("width", x.bandwidth())
+          .attr("y", function(d) {
+              return (y(d.value));
+          });
+
+      //create xAxis
+      var xAxis = chart.append("g")
+          .attr("class","x axis")
+          .attr("transform","translate(0," + height+ ")")
+          .call(d3.axisBottom(x))
+        ;
+
+      //create yAxis
+      var yAxis = chart.append("g")
+          .attr("class","y axis")
+          .call(d3.axisLeft(y).ticks(4))
+          //Add label vertically rotated
+        .append("text")
+          .attr("transform","rotate(-90)")
+          .attr("y",0 - margin.left)
+          .attr("x",0 - (height/2))
+          .attr("dy", "1.5em")
+          .style("text-anchor","end")
+          .text("Frequency")
+        ;
+
+        })
+
+        //coerce to number
+        function type(d) {
+          d.value = +d.value;
+          return d;
+        }
+
+    </script>
+
+  </body>
+</html>

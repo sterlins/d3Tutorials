@@ -1,0 +1,97 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>D3 Graphic</title>
+    <link rel="stylesheet" href="_/base.css">
+    <!-- Stylesheet for CSS that we want to use for styling elements that we've placed with D3 -->
+    <script src="_/d3.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style type = "text/css">
+
+
+    .chart rect {
+      fill: steelblue;
+    }
+
+    .chart text {
+      fill: white;
+      font: 10px sans-serif;
+      text-anchor: end;
+    }
+
+    </style>
+  </head>
+  <body>
+    <!-- <script src="script.js"></script> -->
+    <svg class="chart"></svg>
+    <script>
+    //https://bost.ocks.org/mike/bar/
+    var width = 960;
+    var height = 500;
+
+    //Adds scale to x-axis
+    var y = d3.scaleLinear()
+    //only range can be set before the data load.  Domain is set in callback function
+        .range([height, 0]);
+
+    var chart = d3.select(".chart")
+        .attr("width",width)
+        .attr("height",height);
+
+    //Use an external .tsv for the data.  Complete remainder of chart in
+    //callback function
+    //You will get an error if you just link the data file, because
+    //browsers enforce strict security permissions to prevent you from reading
+    // files out of the local file system.
+    // To develop locally, you must run a local web server rather than using file://….
+    // See instructions on: https://github.com/d3/d3/wiki
+    d3.tsv("data.tsv", type, function(error, data) {
+      //now we can set the input domain for the x scale
+      y.domain([0, d3.max(data, function(d) {
+          return d.value;
+        })
+      ]);
+
+      //set bar width
+      var barWidth = width/data.length;
+
+      //Initiates each of the bars
+      var bar = chart.selectAll("g")
+          .data(data)
+        .enter().append("g")
+          .attr("transform", function (d,i) {
+              return "translate(" + i * barWidth + ",0)";
+          });
+
+      //Adds scaled rectangles for each data point
+      bar.append("rect")
+          .attr("height", function(d) {
+              return height - y(d.value);
+            })
+          .attr("width", barWidth - 1)
+          .attr("y", function(d) {
+              return (y(d.value));
+          })
+
+      bar.append("text")
+          .attr("x", barWidth / 2)
+          .attr("y", function(d){
+              return y(d.value) + 3;
+          })
+          .attr("dy", ".75em")
+          .text(function(d){
+              return d.value;
+          });
+
+        })
+
+        //coerce to number
+        function type(d) {
+          d.value = +d.value;
+          return d;
+        }
+
+    </script>
+
+  </body>
+</html>
